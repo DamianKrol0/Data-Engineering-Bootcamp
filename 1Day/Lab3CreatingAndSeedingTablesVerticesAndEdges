@@ -1,0 +1,105 @@
+-- CREATE TYPE VERTEX_TYPE  as ENUM('player','team','game')
+-- CREATE TABLE VERTICES (
+-- 	IDENTIFIER TEXT,
+-- 	TYPE VERTEX_TYPE,
+-- 	PROPERTIES JSON,
+-- 	PRIMARY KEY (IDENTIFIER, TYPE)
+-- -- )
+-- CREATE TYPE EDGE_TYPE AS ENUM(
+-- 	'plays_against',
+-- 	'shares_team',
+-- 	'plays_in',
+-- 	'plays_on'
+-- )
+-- CREATE TABLE EDGES (
+-- 	SUBJECT_IDENTIFIER TEXT,
+-- 	SUBJECT_TYPE VERTEX_TYPE,
+-- 	OBJECT_IDENTIFIER TEXT,
+-- 	OBJECT_TYPE VERTEX_TYPE,
+-- 	EDGE_TYPE EDGE_TYPE,
+-- 	PROPERTIESS JSON,
+-- 	PRIMARY KEY (
+-- 		SUBJECT_IDENTIFIER,
+-- 		SUBJECT_TYPE,
+-- 		OBJECT_IDENTIFIER,
+-- 		OBJECT_TYPE,
+-- 		EDGE_TYPE
+-- 	)
+-- )
+-- INSERT INTO VERTICES
+-- SELECT
+-- 	GAME_ID AS IDENTFIER,
+-- 	'game'::VERTEX_TYPE AS TYPE,
+-- 	JSON_BUILD_OBJECT(
+-- 		'pts_home',
+-- 		PTS_HOME,
+-- 		'pts_away',
+-- 		PTS_AWAY,
+-- 		'winning_team',
+-- 		CASE
+-- 			WHEN HOME_TEAM_WINS = 1 THEN HOME_TEAM_ID
+-- 			ELSE VISITOR_TEAM_ID
+-- 		END
+-- 	) AS PROPERTIES
+-- FROM
+-- 	GAMES
+-- INSERT INTO VERTICES
+-- WITH
+-- 	PLAYER_AGG AS (
+-- 		SELECT
+-- 			PLAYER_ID AS IDENTIFIER,
+-- 			MAX(PLAYER_NAME) AS PLAYER_NAME,
+-- 			COUNT(1) AS NUMBER_OF_GAMES,
+-- 			SUM(PTS) AS TOTAL_POINTS,
+-- 			ARRAY_AGG(DISTINCT TEAM_ID) AS TEAMS
+-- 		FROM
+-- 			GAME_DETAILS
+-- 		GROUP BY
+-- 			PLAYER_ID
+-- 	)
+-- SELECT
+-- 	IDENTIFIER,
+-- 	'player'::VERTEX_TYPE,
+-- 	JSON_BUILD_OBJECT(
+-- 		'player_name',
+-- 		PLAYER_NAME,
+-- 		'number_of_games',
+-- 		NUMBER_OF_GAMES,
+-- 		'total_points',
+-- 		TOTAL_POINTS,
+-- 		'teams',
+-- 		TEAMS
+-- 	)
+-- -- 	FROM Player_agg
+-- INSERT INTO
+-- 	VERTICES
+-- WITH
+-- 	TEAM_DEDUPED AS (
+-- 		SELECT
+-- 			*,
+-- 			ROW_NUMBER() OVER (
+-- 				PARTITION BY
+-- 					TEAM_ID
+-- 			) AS ROW_NUMBER
+-- 		FROM
+-- 			TEAMS
+-- 	)
+-- SELECT
+-- 	TEAM_ID AS IDENTIFIER,
+-- 	'team'::VERTEX_TYPE AS TYPE,
+-- 	JSON_BUILD_OBJECT(
+-- 		'abbreviation',
+-- 		ABBREVIATION,
+-- 		'nickname',
+-- 		NICKNAME,
+-- 		'city',
+-- 		CITY,
+-- 		'arena',
+-- 		ARENA,
+-- 		'year_founded',
+-- 		YEARFOUNDED
+-- 	)
+-- FROM
+-- 	TEAM_DEDUPED
+-- WHERE
+-- 	ROW_NUMBER = 1
